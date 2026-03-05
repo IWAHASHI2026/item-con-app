@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Prefix {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  color     String
+  sortOrder Int       @map("sort_order")
+  products  Product[]
+
+  @@map("prefixes")
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  parentNumber String   @unique @map("parent_number")
+  prefixId     Int      @map("prefix_id")
+  prefix       Prefix   @relation(fields: [prefixId], references: [id])
+  designs      Design[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+model Design {
+  id           Int      @id @default(autoincrement())
+  productId    Int      @map("product_id")
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  designLetter String   @map("design_letter")
+  imagePath    String   @map("image_path")
+  comment      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([productId, designLetter])
+  @@map("designs")
+}
