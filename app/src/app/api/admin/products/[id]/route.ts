@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { del } from "@vercel/blob";
 
 export async function DELETE(
   _request: NextRequest,
@@ -19,11 +18,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Delete image files
-  const uploadsDir = path.join(process.cwd(), "uploads");
-  for (const design of product.designs) {
-    const filePath = path.join(uploadsDir, design.imagePath);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  // Delete blob files
+  const urls = product.designs.map((d) => d.imagePath);
+  if (urls.length > 0) {
+    await del(urls);
   }
 
   // Cascade delete handles designs

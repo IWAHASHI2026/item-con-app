@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
+import { put, del } from "@vercel/blob";
 import path from "path";
 
 const VALID_EXTENSIONS = [".jpg", ".jpeg", ".png"];
@@ -60,17 +60,9 @@ export async function POST(request: NextRequest) {
       update: {},
     });
 
-    // Save file
-    const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
+    // Upload to Vercel Blob
     const fileName = `${parentNumber}-${designLetter}${ext}`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    const arrayBuffer = await file.arrayBuffer();
-    fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+    const blob = await put(fileName, file, { access: "public" });
 
     // Upsert design
     const existing = await prisma.design.findUnique({
@@ -83,21 +75,20 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      // Delete old file if different
-      if (existing.imagePath !== fileName) {
-        const oldPath = path.join(uploadsDir, existing.imagePath);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      // Delete old blob if different
+      if (existing.imagePath !== blob.url) {
+        await del(existing.imagePath);
       }
       await prisma.design.update({
         where: { id: existing.id },
-        data: { imagePath: fileName },
+        data: { imagePath: blob.url },
       });
     } else {
       await prisma.design.create({
         data: {
           productId: product.id,
           designLetter,
-          imagePath: fileName,
+          imagePath: blob.url,
         },
       });
     }

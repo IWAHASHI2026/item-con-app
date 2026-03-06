@@ -74,7 +74,7 @@ export default function ProductPage() {
               className="relative aspect-square bg-white rounded-lg overflow-hidden border-2 border-gray-200 active:border-blue-500"
             >
               <Image
-                src={`/api/images/${encodeURIComponent(design.imagePath)}`}
+                src={design.imagePath}
                 alt={`${parentNumber}-${design.designLetter}`}
                 fill
                 className="object-cover"

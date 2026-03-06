@@ -123,7 +123,7 @@ export default function ProductsManagePage() {
                     >
                       <div className="w-16 h-16 relative flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                         <Image
-                          src={`/api/images/${encodeURIComponent(design.imagePath)}`}
+                          src={design.imagePath}
                           alt={design.designLetter}
                           fill
                           className="object-cover"
