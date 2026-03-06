@@ -15,6 +15,7 @@ export default function PrefixesPage() {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#3B82F6");
   const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchPrefixes = () => {
     fetch("/api/prefixes")
@@ -29,14 +30,25 @@ export default function PrefixesPage() {
   const handleAdd = async () => {
     if (!name.trim()) return;
     setAdding(true);
-    await fetch("/api/admin/prefixes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), color }),
-    });
-    setName("");
-    fetchPrefixes();
-    setAdding(false);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/prefixes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), color }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "追加に失敗しました");
+        return;
+      }
+      setName("");
+      fetchPrefixes();
+    } catch {
+      setError("通信エラーが発生しました");
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -89,9 +101,12 @@ export default function PrefixesPage() {
               disabled={adding || !name.trim()}
               className="bg-blue-600 text-white px-6 py-2 rounded font-bold disabled:opacity-50"
             >
-              追加
+              {adding ? "追加中..." : "追加"}
             </button>
           </div>
+          {error && (
+            <p className="text-red-600 text-sm mt-3">{error}</p>
+          )}
         </div>
       </div>
     </div>
