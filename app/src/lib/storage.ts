@@ -14,7 +14,7 @@ export async function putFile(
   file: File
 ): Promise<{ url: string }> {
   if (useBlob) {
-    const blob = await put(fileName, file, { access: "public" });
+    const blob = await put(fileName, file, { access: "public", allowOverwrite: true });
     return { url: blob.url };
   }
   await ensureUploadDir();
