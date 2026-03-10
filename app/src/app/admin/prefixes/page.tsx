@@ -17,10 +17,15 @@ export default function PrefixesPage() {
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchPrefixes = () => {
-    fetch("/api/prefixes")
-      .then((res) => res.json())
-      .then(setPrefixes);
+  const fetchPrefixes = async () => {
+    try {
+      const res = await fetch("/api/prefixes");
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      setPrefixes(data);
+    } catch {
+      setError("プレフィックスの取得に失敗しました");
+    }
   };
 
   useEffect(() => {
