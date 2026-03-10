@@ -9,10 +9,21 @@ type UploadResult = {
   errors: string[];
 };
 
+const BATCH_SIZE = 3;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
 export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,25 +38,36 @@ export default function UploadPage() {
     setUploading(true);
     setResult(null);
 
-    const formData = new FormData();
-    for (const file of files) {
-      formData.append("files", file);
+    const batches = chunkArray(files, BATCH_SIZE);
+    const aggregated: UploadResult = { success: 0, skipped: 0, errors: [] };
+
+    for (let i = 0; i < batches.length; i++) {
+      setProgress({ current: i + 1, total: batches.length });
+
+      const formData = new FormData();
+      for (const file of batches[i]) {
+        formData.append("files", file);
+      }
+
+      try {
+        const res = await fetch("/api/admin/upload/images", {
+          method: "POST",
+          body: formData,
+        });
+        const data: UploadResult = await res.json();
+        aggregated.success += data.success;
+        aggregated.skipped += data.skipped;
+        aggregated.errors.push(...data.errors);
+      } catch {
+        aggregated.errors.push(`バッチ ${i + 1} のアップロード中にエラーが発生しました`);
+      }
     }
 
-    try {
-      const res = await fetch("/api/admin/upload/images", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      setResult(data);
-      setFiles([]);
-      if (inputRef.current) inputRef.current.value = "";
-    } catch {
-      setResult({ success: 0, skipped: 0, errors: ["アップロード中にエラーが発生しました"] });
-    } finally {
-      setUploading(false);
-    }
+    setResult(aggregated);
+    setProgress(null);
+    setFiles([]);
+    if (inputRef.current) inputRef.current.value = "";
+    setUploading(false);
   };
 
   return (
@@ -91,6 +113,20 @@ export default function UploadPage() {
             {uploading ? "アップロード中..." : "アップロード"}
           </button>
         </div>
+
+        {progress && (
+          <div className="bg-white rounded-lg p-6 shadow mt-4">
+            <p className="text-sm font-bold mb-2">
+              バッチ {progress.current} / {progress.total} をアップロード中...
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-blue-600 h-3 rounded-full transition-all"
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {result && (
           <div className="bg-white rounded-lg p-6 shadow mt-4">
