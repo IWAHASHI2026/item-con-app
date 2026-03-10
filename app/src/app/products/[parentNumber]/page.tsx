@@ -109,23 +109,24 @@ export default function ProductPage() {
             className="flex-1 flex items-center justify-center overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-2xl touch-pinch-zoom">
-              <Image
-                src={selectedDesign.imagePath}
-                alt={`${parentNumber}-${selectedDesign.designLetter}`}
-                width={800}
-                height={800}
-                className="w-full h-auto"
-                style={{ touchAction: "pinch-zoom" }}
-              />
+            <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 lg:px-8">
+              <div className="w-[70%] max-w-2xl mx-auto lg:mx-0 touch-pinch-zoom shrink-0">
+                <Image
+                  src={selectedDesign.imagePath}
+                  alt={`${parentNumber}-${selectedDesign.designLetter}`}
+                  width={800}
+                  height={800}
+                  className="w-full h-auto"
+                  style={{ touchAction: "pinch-zoom" }}
+                />
+              </div>
+              {selectedDesign.comment && (
+                <div className="bg-white p-4 mx-4 mt-4 lg:mx-0 lg:mt-0 rounded-lg lg:max-w-xs">
+                  <p>{selectedDesign.comment}</p>
+                </div>
+              )}
             </div>
           </div>
-          {selectedDesign.comment && (
-            <div className="bg-white p-4 mx-4 mb-4 rounded-lg">
-              <p className="text-sm font-bold text-gray-600 mb-1">コメント</p>
-              <p>{selectedDesign.comment}</p>
-            </div>
-          )}
         </div>
       )}
     </div>
