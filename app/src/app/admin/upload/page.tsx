@@ -9,7 +9,7 @@ type UploadResult = {
   errors: string[];
 };
 
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 2;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
