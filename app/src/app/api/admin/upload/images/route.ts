@@ -44,57 +44,63 @@ export async function POST(request: NextRequest) {
       const designLetter = match[3].toLowerCase();
       const parentNumber = `${prefixName}${number}`;
 
-      // Check if prefix exists
-      const prefix = await prisma.prefix.findUnique({
-        where: { name: prefixName },
-      });
-      if (!prefix) {
-        results.errors.push(`${file.name}: プレフィックス "${prefixName}" が登録されていません`);
-        results.skipped++;
-        continue;
-      }
-
-      // Ensure product exists
-      const product = await prisma.product.upsert({
-        where: { parentNumber },
-        create: { parentNumber, prefixId: prefix.id },
-        update: {},
-      });
-
-      // Save file to local storage
-      const fileName = `${parentNumber}-${designLetter}${ext}`;
-      const saved = await putFile(fileName, file);
-
-      // Upsert design
-      const existing = await prisma.design.findUnique({
-        where: {
-          productId_designLetter: {
-            productId: product.id,
-            designLetter,
-          },
-        },
-      });
-
-      if (existing) {
-        // Delete old file if different
-        if (existing.imagePath !== saved.url) {
-          await deleteFile(existing.imagePath);
+      try {
+        // Check if prefix exists
+        const prefix = await prisma.prefix.findUnique({
+          where: { name: prefixName },
+        });
+        if (!prefix) {
+          results.errors.push(`${file.name}: プレフィックス "${prefixName}" が登録されていません`);
+          results.skipped++;
+          continue;
         }
-        await prisma.design.update({
-          where: { id: existing.id },
-          data: { imagePath: saved.url },
+
+        // Ensure product exists
+        const product = await prisma.product.upsert({
+          where: { parentNumber },
+          create: { parentNumber, prefixId: prefix.id },
+          update: {},
         });
-      } else {
-        await prisma.design.create({
-          data: {
-            productId: product.id,
-            designLetter,
-            imagePath: saved.url,
+
+        // Save file to storage
+        const fileName = `${parentNumber}-${designLetter}${ext}`;
+        const saved = await putFile(fileName, file);
+
+        // Upsert design
+        const existing = await prisma.design.findUnique({
+          where: {
+            productId_designLetter: {
+              productId: product.id,
+              designLetter,
+            },
           },
         });
-      }
 
-      results.success++;
+        if (existing) {
+          // Delete old file if different
+          if (existing.imagePath !== saved.url) {
+            await deleteFile(existing.imagePath);
+          }
+          await prisma.design.update({
+            where: { id: existing.id },
+            data: { imagePath: saved.url },
+          });
+        } else {
+          await prisma.design.create({
+            data: {
+              productId: product.id,
+              designLetter,
+              imagePath: saved.url,
+            },
+          });
+        }
+
+        results.success++;
+      } catch (fileError) {
+        const msg = fileError instanceof Error ? fileError.message : "不明なエラー";
+        console.error(`${file.name} の処理エラー:`, fileError);
+        results.errors.push(`${file.name}: ${msg}`);
+      }
     }
 
     return NextResponse.json(results);
