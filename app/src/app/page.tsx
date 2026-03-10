@@ -67,7 +67,7 @@ export default function Home() {
                 key={p.id}
                 onClick={() => handlePrefixClick(p.name)}
                 style={{ backgroundColor: p.color }}
-                className="text-white font-bold py-4 rounded-lg text-sm active:opacity-80"
+                className="text-white font-bold py-4 rounded-lg text-2xl active:opacity-80"
               >
                 {p.name}
               </button>
