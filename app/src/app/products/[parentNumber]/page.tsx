@@ -111,7 +111,7 @@ export default function ProductPage() {
           >
             <div className="w-full max-w-2xl touch-pinch-zoom">
               <Image
-                src={`/api/images/${encodeURIComponent(selectedDesign.imagePath)}`}
+                src={selectedDesign.imagePath}
                 alt={`${parentNumber}-${selectedDesign.designLetter}`}
                 width={800}
                 height={800}

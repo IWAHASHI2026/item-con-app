@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { del } from "@vercel/blob";
+import { deleteFiles } from "@/lib/storage";
 
 export async function DELETE(
   _request: NextRequest,
@@ -18,10 +18,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Delete blob files
+  // Delete local files
   const urls = product.designs.map((d) => d.imagePath);
   if (urls.length > 0) {
-    await del(urls);
+    await deleteFiles(urls);
   }
 
   // Cascade delete handles designs

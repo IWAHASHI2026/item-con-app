@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { del } from "@vercel/blob";
+import { deleteFile } from "@/lib/storage";
 
 export async function PUT(
   request: NextRequest,
@@ -43,8 +43,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Delete blob file
-  await del(design.imagePath);
+  // Delete local file
+  await deleteFile(design.imagePath);
 
   await prisma.design.delete({ where: { id: designId } });
 
