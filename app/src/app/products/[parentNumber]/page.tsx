@@ -138,7 +138,7 @@ export default function ProductPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 lg:px-8">
-              <div className="w-[70vw] max-w-2xl mx-auto lg:mx-0 touch-pinch-zoom shrink-0">
+              <div className="w-[50vw] max-w-2xl mx-auto lg:mx-0 touch-pinch-zoom shrink-0">
                 <Image
                   src={selectedDesign.imagePath}
                   alt={`${parentNumber}-${selectedDesign.designLetter}`}
