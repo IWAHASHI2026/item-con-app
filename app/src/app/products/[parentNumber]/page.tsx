@@ -37,6 +37,29 @@ export default function ProductPage() {
       .catch(() => setLoading(false));
   }, [parentNumber]);
 
+  const handleDeleteComment = async (design: Design) => {
+    if (!confirm("このコメントを削除しますか？")) return;
+    const res = await fetch(`/api/admin/designs/${design.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comment: null }),
+    });
+    if (res.ok) {
+      const updated = { ...design, comment: null };
+      setSelectedDesign(updated);
+      setProduct((prev) =>
+        prev
+          ? {
+              ...prev,
+              designs: prev.designs.map((d) =>
+                d.id === design.id ? updated : d
+              ),
+            }
+          : prev
+      );
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-gray-500">読み込み中...</div>;
   }
@@ -80,8 +103,13 @@ export default function ProductPage() {
                 className="object-cover"
                 sizes="(max-width: 640px) 33vw, 200px"
               />
-              <span className="absolute top-1 left-1 bg-black/60 text-white text-xs w-5 h-5 flex items-center justify-center rounded">
-                {design.designLetter}
+              <span className="absolute top-1 left-1 flex items-center gap-0.5">
+                <span className="bg-black/60 text-white text-xs w-5 h-5 flex items-center justify-center rounded">
+                  {design.designLetter}
+                </span>
+                {design.comment && (
+                  <span className="w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                )}
               </span>
             </button>
           ))}
@@ -123,6 +151,12 @@ export default function ProductPage() {
               {selectedDesign.comment && (
                 <div className="bg-white p-4 mx-4 mt-4 lg:mx-0 lg:mt-0 rounded-lg lg:max-w-xs">
                   <p>{selectedDesign.comment}</p>
+                  <button
+                    onClick={() => handleDeleteComment(selectedDesign)}
+                    className="mt-2 text-red-500 text-sm underline"
+                  >
+                    コメント削除
+                  </button>
                 </div>
               )}
             </div>
