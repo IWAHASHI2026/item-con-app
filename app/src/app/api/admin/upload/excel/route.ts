@@ -7,6 +7,8 @@ const MANAGEMENT_NUMBER_REGEX = /^([a-zA-Z]+)(\d{3})-([a-y])$/i;
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file") as File;
+  const mode = formData.get("mode") as string | null;
+  const isDeleteMode = mode === "delete";
 
   if (!file) {
     return NextResponse.json({ error: "ファイルが選択されていません" }, { status: 400 });
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const managementNumber = String(row[0] || "").trim();
-    const comment = String(row[1] || "").trim();
+    const comment = isDeleteMode ? "" : String(row[1] || "").trim();
 
     if (!managementNumber) continue;
 

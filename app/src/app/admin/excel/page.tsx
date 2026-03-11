@@ -9,19 +9,31 @@ type UploadResult = {
   errors: string[];
 };
 
+type Mode = "comment" | "delete";
+
 export default function ExcelUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [mode, setMode] = useState<Mode>("comment");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async () => {
     if (!file) return;
+
+    if (mode === "delete") {
+      const ok = window.confirm("コメントを削除します。よろしいですか？");
+      if (!ok) return;
+    }
+
     setUploading(true);
     setResult(null);
 
     const formData = new FormData();
     formData.append("file", file);
+    if (mode === "delete") {
+      formData.append("mode", "delete");
+    }
 
     try {
       const res = await fetch("/api/admin/upload/excel", {
@@ -48,8 +60,33 @@ export default function ExcelUploadPage() {
         <h1 className="text-2xl font-bold mb-6">Excelアップロード</h1>
 
         <div className="bg-white rounded-lg p-6 shadow">
+          <div className="flex gap-4 mb-4">
+            <button
+              onClick={() => { setMode("comment"); setResult(null); }}
+              className={`px-4 py-2 rounded font-bold text-sm ${
+                mode === "comment"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              コメント登録
+            </button>
+            <button
+              onClick={() => { setMode("delete"); setResult(null); }}
+              className={`px-4 py-2 rounded font-bold text-sm ${
+                mode === "delete"
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              コメント削除
+            </button>
+          </div>
+
           <p className="text-sm text-gray-600 mb-4">
-            Excelのフォーマット: A列=管理番号（例: lk027-a）、B列=コメント
+            {mode === "comment"
+              ? "Excelのフォーマット: A列=管理番号（例: lk027-a）、B列=コメント"
+              : "Excelのフォーマット: A列=管理番号（例: lk027-a）※該当デザインのコメントを削除します"}
           </p>
 
           <input
@@ -70,9 +107,13 @@ export default function ExcelUploadPage() {
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="bg-blue-600 text-white px-6 py-2 rounded font-bold disabled:opacity-50"
+            className={`${
+              mode === "delete" ? "bg-red-600" : "bg-blue-600"
+            } text-white px-6 py-2 rounded font-bold disabled:opacity-50`}
           >
-            {uploading ? "登録中..." : "登録"}
+            {uploading
+              ? mode === "delete" ? "削除中..." : "登録中..."
+              : mode === "delete" ? "削除実行" : "登録"}
           </button>
         </div>
 
